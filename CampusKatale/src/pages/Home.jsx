@@ -1,5 +1,6 @@
-import { AdCard, Scroll, Navbar } from "../components";
+import { AdCard, Scroll, Navbar, Footer } from "../components";
 import { useEffect, useState } from "react";
+import "@fontsource-variable/lexend";
 
 function Home() {
   const [products, setProducts] = useState([]);
@@ -8,13 +9,9 @@ function Home() {
 
   useEffect(() => {
     async function fetchProducts() {
-      setLoading(true);
-      setError(null);
-
       try {
         const response = await fetch("https://dummyjson.com/products");
         if (!response.ok) throw new Error("Network response was not ok");
-
         const data = await response.json();
         const formattedProducts = data.products.map((product) => ({
           id: product.id,
@@ -32,33 +29,25 @@ function Home() {
         setLoading(false);
       }
     }
-
     fetchProducts();
   }, []);
 
   if (loading)
     return (
-      <div className="flex items-center justify-center h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black">
-        <div className="flex flex-col items-center space-y-4">
-          <div className="w-16 h-16 border-4 border-t-transparent border-indigo-500 rounded-full animate-spin"></div>
-          <p
-            className="text-indigo-400 text-lg font-semibold animate-pulse"
-            role="status"
-          >
-            Loading products...
-          </p>
+      <div className="flex items-center justify-center h-screen bg-[#F9FAFB] font-[Lexend]">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-t-transparent border-[#177529] rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-[#177529] font-medium">Loading products...</p>
         </div>
       </div>
     );
 
   if (error)
     return (
-      <div className="flex items-center justify-center h-screen bg-gradient-to-br from-red-900 via-red-800 to-black">
-        <div className="text-center">
-          <div className="text-5xl mb-4 animate-bounce">⚠️</div>
-          <p className="text-red-300 text-xl font-semibold animate-fadeIn">
-            {error}
-          </p>
+      <div className="flex items-center justify-center h-screen bg-[#F9FAFB] font-[Lexend]">
+        <div className="text-center text-[#177529]">
+          <p className="text-lg font-semibold mb-2">⚠️ Error</p>
+          <p>{error}</p>
         </div>
       </div>
     );
@@ -66,27 +55,22 @@ function Home() {
   return (
     <>
       <Navbar />
-      <div className="container mx-auto p-4 pt-28">
+      <main className="font-[Lexend] bg-[#F9FAFB] min-h-screen pt-28 px-6 md:px-10">
+        <h1 className="text-2xl md:text-3xl font-semibold text-[#0C0D19] mb-6">
+          Browse Latest Listings
+        </h1>
         {products.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {products.map((product) => (
-              <AdCard
-                key={product.id}
-                id={product.id}
-                image={product.image}
-                title={product.title}
-                description={product.description}
-                badge={product.badge}
-                buttonText={product.buttonText}
-                href={product.href}
-              />
+              <AdCard key={product.id} {...product} />
             ))}
           </div>
         ) : (
-          <p className="text-center text-gray-500">No ads available.</p>
+          <p className="text-center text-[#6B7280]">No ads available.</p>
         )}
         <Scroll />
-      </div>
+        <Footer />
+      </main>
     </>
   );
 }
