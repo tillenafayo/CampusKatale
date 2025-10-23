@@ -21,7 +21,7 @@ createRoot(document.getElementById("root")).render(
         <BrowserRouter>
           <App />
         </BrowserRouter>
+      </ClerkProvider>
       </MantineProvider>
-    </ClerkProvider>
   </StrictMode>
 );
