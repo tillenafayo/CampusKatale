@@ -1,26 +1,33 @@
 import React, { useState } from "react";
+import { useUser, useAuth, useClerk } from "@clerk/clerk-react";
 import { useNavigate } from "react-router-dom";
 import { FaEdit, FaSignOutAlt } from "react-icons/fa";
 
-function Profile({ user }) {
+function Profile() {
+  const { user } = useUser();        // Clerk authenticated user
+  const { signOut } = useAuth();     // Logout function
+  const clerk = useClerk();          // Full Clerk instance
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("ads");
 
+  // Default placeholders (fallback)
   const defaultUser = {
-    name: "Bwambale Reuel",
-    email: "atwanbwambs@gmail.com",
-    role: "User",
-    avatar: "https://reuelbwambs.netlify.app/images/2.jpg",
-    stats: {
-      ads: 12,
-      sells: 120,
-      buys: 45,
-    },
-    about:
-      "Hi! I’m Reuel, a tech-loving student who enjoys developing solutions to real-world problems. Always learning, always exploring.",
+    name: "CampusKatale User",
+    email: "user@example.com",
+    avatar: "https://via.placeholder.com/150",
+    stats: { ads: 0, sells: 0, buys: 0 },
+    about: "Welcome to CampusKatale! Complete your profile to get started.",
   };
 
-  const currentUser = user || defaultUser;
+  const currentUser = user
+    ? {
+        name: user.fullName || user.firstName || defaultUser.name,
+        email: user.primaryEmailAddress?.emailAddress || defaultUser.email,
+        avatar: user.imageUrl || defaultUser.avatar,
+        stats: defaultUser.stats,
+        about: defaultUser.about,
+      }
+    : defaultUser;
 
   const tabs = [
     { key: "ads", label: "Ads Posted" },
@@ -29,7 +36,7 @@ function Profile({ user }) {
   ];
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB] flex justify-center py-12 px-4">
+    <div className="min-h-screen bg-[#F9FAFB] flex justify-center py-12 px-4 font-[Lexend]">
       <div className="w-full max-w-4xl bg-white rounded-3xl shadow-lg p-8">
         {/* Header */}
         <div className="flex flex-col md:flex-row items-center md:items-start gap-6 md:gap-12">
@@ -45,11 +52,9 @@ function Profile({ user }) {
           </div>
 
           <div className="flex-1 flex flex-col gap-2">
-            <h1 className="text-3xl font-bold text-[#0C0D19]">
-              {currentUser.name}
-            </h1>
+            <h1 className="text-3xl font-bold text-[#0C0D19]">{currentUser.name}</h1>
             <p className="text-gray-600">{currentUser.email}</p>
-            <p className="text-[#177529] font-medium">{currentUser.role}</p>
+            <p className="text-[#177529] font-medium">Verified User</p>
 
             <div className="mt-4 flex gap-4">
               <button
@@ -58,36 +63,28 @@ function Profile({ user }) {
               >
                 Back to Home
               </button>
-              <button className="px-4 py-2 border border-[#177529] text-[#177529] rounded-xl hover:bg-[#177529] hover:text-white transition-all flex items-center gap-2">
+
+              <button
+                className="px-4 py-2 border border-[#177529] text-[#177529] rounded-xl hover:bg-[#177529] hover:text-white transition-all flex items-center gap-2"
+                onClick={() => signOut(() => navigate("/"))}
+              >
                 <FaSignOutAlt /> Logout
               </button>
             </div>
           </div>
         </div>
 
-        {/* Stats Cards */}
+        {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-10">
-          <div className="bg-[#F9FAFB] rounded-xl shadow p-6 text-center">
-            <p className="text-2xl font-bold text-[#177529]">
-              {currentUser.stats.ads}
-            </p>
-            <p className="text-gray-600">Ads Posted</p>
-          </div>
-          <div className="bg-[#F9FAFB] rounded-xl shadow p-6 text-center">
-            <p className="text-2xl font-bold text-[#177529]">
-              {currentUser.stats.sells}
-            </p>
-            <p className="text-gray-600">Sales Made</p>
-          </div>
-          <div className="bg-[#F9FAFB] rounded-xl shadow p-6 text-center">
-            <p className="text-2xl font-bold text-[#177529]">
-              {currentUser.stats.buys}
-            </p>
-            <p className="text-gray-600">Purchases Made</p>
-          </div>
+          {Object.entries(currentUser.stats).map(([key, value]) => (
+            <div key={key} className="bg-[#F9FAFB] rounded-xl shadow p-6 text-center">
+              <p className="text-2xl font-bold text-[#177529]">{value}</p>
+              <p className="text-gray-600 capitalize">{key}</p>
+            </div>
+          ))}
         </div>
 
-        {/* Tabs for activity */}
+        {/* Tabs */}
         <div className="mt-10">
           <div className="flex border-b border-gray-200">
             {tabs.map((tab) => (
@@ -105,20 +102,14 @@ function Profile({ user }) {
             ))}
           </div>
 
-          <div className="mt-6 min-h-[120px]">
-            {activeTab === "ads" && (
-              <p className="text-gray-600">You have posted {currentUser.stats.ads} ads.</p>
-            )}
-            {activeTab === "sells" && (
-              <p className="text-gray-600">You have completed {currentUser.stats.sells} sales.</p>
-            )}
-            {activeTab === "buys" && (
-              <p className="text-gray-600">You have made {currentUser.stats.buys} purchases.</p>
-            )}
+          <div className="mt-6 min-h-[120px] text-gray-600">
+            {activeTab === "ads" && `You have posted ${currentUser.stats.ads} ads.`}
+            {activeTab === "sells" && `You have completed ${currentUser.stats.sells} sales.`}
+            {activeTab === "buys" && `You have made ${currentUser.stats.buys} purchases.`}
           </div>
         </div>
 
-        {/* About Section */}
+        {/* About */}
         <div className="mt-10">
           <h2 className="text-xl font-semibold text-[#0C0D19] mb-4">About Me</h2>
           <p className="text-gray-600">{currentUser.about}</p>

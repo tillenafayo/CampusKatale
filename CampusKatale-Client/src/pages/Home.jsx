@@ -1,4 +1,4 @@
-import { AdCard, Scroll, Navbar, Footer } from "../components";
+import { AdCard, Scroll, Navbar, Footer, Hero } from "../components";
 import { useEffect, useState } from "react";
 import "@fontsource-variable/lexend";
 import { useNavigate } from "react-router-dom";
@@ -61,7 +61,8 @@ function Home() {
   return (
     <>
       <Navbar />
-      <main className="font-[Lexend] bg-[#F9FAFB] min-h-screen pt-28 px-6 md:px-10">
+      <Hero />
+      <main className="font-[Lexend] bg-[#F9FAFB] min-h-screen pt-10 px-6 md:px-10">
         <h1 className="text-2xl md:text-3xl font-semibold text-[#0C0D19] mb-6 lg:px-80">
           Browse Latest Listings
         </h1>

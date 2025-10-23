@@ -7,6 +7,7 @@ import {
   IconShoppingCart,
   IconSun,
   IconMoon,
+  IconPlus,
 } from "@tabler/icons-react";
 import {
   ActionIcon,
@@ -45,7 +46,12 @@ export default function Navbar() {
 
   return (
     <>
-      <Transition mounted transition="fade" duration={400} timingFunction="ease">
+      <Transition
+        mounted
+        transition="fade"
+        duration={400}
+        timingFunction="ease"
+      >
         {(styles) => (
           <header
             style={styles}
@@ -98,6 +104,24 @@ export default function Navbar() {
 
               {/* Right Section */}
               <Group gap="sm">
+                {/* AddListing */}
+                <Menu shadow="md" width={180}>
+                  <Menu.Target>
+                    <Button
+                      variant="outline"
+                      leftSection={<IconPlus size={16} />}
+                      className={`font-medium flex items-center gap-2 transition-colors duration-300 ${
+                        dark
+                          ? "text-[#97C040] border-[#97C040] hover:bg-[#97C040] hover:text-white"
+                          : "text-[#177529] border-[#177529] hover:bg-[#177529] hover:text-white"
+                      }`}
+                      onClick={() => navigate("/add-listing")}
+                    >
+                      Add Listing
+                    </Button>
+                  </Menu.Target>
+                </Menu>
+                {/* User Menu */}
                 <Menu shadow="md" width={180}>
                   <Menu.Target>
                     <Button
@@ -154,7 +178,11 @@ export default function Navbar() {
       <Drawer
         opened={opened}
         onClose={close}
-        title={<Text fw={600} size="lg">Browse Categories</Text>}
+        title={
+          <Text fw={600} size="lg">
+            Browse Categories
+          </Text>
+        }
         padding="md"
         size="sm"
         overlayProps={{ opacity: 0.5, blur: 2 }}
