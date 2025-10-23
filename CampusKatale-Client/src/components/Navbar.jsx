@@ -143,7 +143,6 @@ export default function Navbar() {
                     <Menu.Item onClick={() => navigate("/profile/:id")}>
                       Profile
                     </Menu.Item>
-                    <Menu.Item>Logout</Menu.Item>
                   </Menu.Dropdown>
                 </Menu>
 
