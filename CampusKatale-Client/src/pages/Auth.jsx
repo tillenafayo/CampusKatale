@@ -1,35 +1,98 @@
 import React, { useState } from "react";
+import { useSignIn, useSignUp, useAuth } from "@clerk/clerk-react";
 import { FcGoogle } from "react-icons/fc";
 import { FaApple } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
 function Auth() {
   const [isLogin, setIsLogin] = useState(true);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+
   const navigate = useNavigate();
+  const { signIn, isLoaded: signInLoaded } = useSignIn();
+  const { signUp, isLoaded: signUpLoaded } = useSignUp();
+  const { isSignedIn } = useAuth();
 
   const toggleForm = (form) => setIsLogin(form === "login");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log(isLogin ? "Login submitted" : "Signup submitted");
+    setError(null);
+    setLoading(true);
+
+    try {
+      if (isLogin) {
+        if (!signInLoaded) return;
+
+        const result = await signIn.create({
+          identifier: email,
+          password,
+        });
+
+        if (result.status === "complete") {
+          navigate("/dashboard");
+        } else {
+          console.log("Sign-in next step:", result);
+        }
+      } else {
+        if (!signUpLoaded) return;
+
+        const result = await signUp.create({
+          emailAddress: email,
+          password,
+          firstName: name,
+        });
+
+        if (result.status === "complete") {
+          navigate("/dashboard");
+        } else {
+          console.log("Sign-up next step:", result);
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      setError(err.errors ? err.errors[0].message : err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const goHome = () => {
-    navigate("/"); 
+  const handleOAuth = async (provider, id) => {
+    try {
+      if (isLogin && signInLoaded) {
+        await signIn.authenticateWithRedirect({
+          strategy: provider,
+          redirectUrl: `/profile/${id}`,
+        });
+      } else if (signUpLoaded) {
+        await signUp.authenticateWithRedirect({
+          strategy: provider,
+          redirectUrl: `/profile/${id}`,
+        });
+      }
+    } catch (err) {
+      setError(err.message);
+    }
   };
+
+  const goHome = () => navigate("/");
+
+  // Optional: redirect if already signed in
+  if (isSignedIn) navigate("/profile/:id");
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center"
-      style={{ backgroundColor: "#F9FAFB", fontFamily: "Lexend" }}
-    >
+    <div className="min-h-screen flex items-center justify-center bg-[#F9FAFB] font-[Lexend]">
       <div className="relative w-full max-w-md overflow-hidden rounded-3xl shadow-lg bg-white">
-        {/* Tab Navigation */}
+        {/* Tabs */}
         <div className="flex justify-around bg-[#F9FAFB] p-2 rounded-t-3xl mb-6">
           <button
             onClick={() => toggleForm("login")}
             className={`w-1/2 py-2 rounded-2xl font-semibold transition-all ${
-              isLogin ? "bg-[#177529] text-white shadow-md" : "text-[#0C0D19]"
+              isLogin ? "bg-[#177529] text-white" : "text-[#0C0D19]"
             }`}
           >
             Login
@@ -37,14 +100,13 @@ function Auth() {
           <button
             onClick={() => toggleForm("signup")}
             className={`w-1/2 py-2 rounded-2xl font-semibold transition-all ${
-              !isLogin ? "bg-[#177529] text-white shadow-md" : "text-[#0C0D19]"
+              !isLogin ? "bg-[#177529] text-white" : "text-[#0C0D19]"
             }`}
           >
             Sign Up
           </button>
         </div>
 
-        {/* Slider Container */}
         <div
           className="flex w-[200%] transition-transform duration-500"
           style={{ transform: isLogin ? "translateX(0%)" : "translateX(-50%)" }}
@@ -52,61 +114,42 @@ function Auth() {
           {/* Login Form */}
           <div className="w-1/2 p-10 flex flex-col">
             <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-              <div className="relative">
-                <input
-                  type="email"
-                  id="login-email"
-                  placeholder=" "
-                  className="peer w-full p-4 rounded-lg border border-gray-300 focus:border-[#177529] focus:ring-1 focus:ring-[#177529] focus:outline-none text-[#0C0D19]"
-                  style={{ backgroundColor: "#F9FAFB" }}
-                />
-                <label
-                  htmlFor="login-email"
-                  className="absolute left-4 top-4 text-gray-400 text-sm
-                             peer-placeholder-shown:top-4 peer-placeholder-shown:text-base
-                             peer-placeholder-shown:text-gray-400
-                             peer-focus:top-1 peer-focus:text-sm peer-focus:text-[#177529] transition-all"
-                >
-                  Email
-                </label>
-              </div>
-
-              <div className="relative">
-                <input
-                  type="password"
-                  id="login-password"
-                  placeholder=" "
-                  className="peer w-full p-4 rounded-lg border border-gray-300 focus:border-[#177529] focus:ring-1 focus:ring-[#177529] focus:outline-none text-[#0C0D19]"
-                  style={{ backgroundColor: "#F9FAFB" }}
-                />
-                <label
-                  htmlFor="login-password"
-                  className="absolute left-4 top-4 text-gray-400 text-sm
-                             peer-placeholder-shown:top-4 peer-placeholder-shown:text-base
-                             peer-placeholder-shown:text-gray-400
-                             peer-focus:top-1 peer-focus:text-sm peer-focus:text-[#177529] transition-all"
-                >
-                  Password
-                </label>
-              </div>
-
+              <input
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="p-4 rounded-lg border border-gray-300"
+              />
+              <input
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="p-4 rounded-lg border border-gray-300"
+              />
               <button
                 type="submit"
-                className="p-4 rounded-xl font-bold text-white hover:brightness-105 transition-all shadow-md"
-                style={{ backgroundColor: "#177529" }}
+                disabled={loading}
+                className="p-4 rounded-xl font-bold text-white bg-[#177529]"
               >
-                Login
+                {loading ? "Logging in..." : "Login"}
               </button>
             </form>
 
-            {/* Social Login */}
-            <div className="mt-6 flex flex-col gap-4">
-              <p className="text-center text-gray-500 font-medium">Or sign in with</p>
+            <div className="mt-6 text-center">
+              <p className="text-gray-500 font-medium mb-2">Or sign in with</p>
               <div className="flex justify-center gap-4">
-                <button className="flex items-center justify-center gap-2 p-3 rounded-xl border border-gray-300 hover:shadow-md transition-all w-24">
+                <button
+                  onClick={() => handleOAuth("oauth_google")}
+                  className="flex items-center gap-2 p-3 rounded-xl border border-gray-300 hover:shadow-md transition-all w-24"
+                >
                   <FcGoogle size={20} /> Google
                 </button>
-                <button className="flex items-center justify-center gap-2 p-3 rounded-xl border border-gray-300 hover:shadow-md transition-all w-24">
+                <button
+                  onClick={() => handleOAuth("oauth_apple")}
+                  className="flex items-center gap-2 p-3 rounded-xl border border-gray-300 hover:shadow-md transition-all w-24"
+                >
                   <FaApple size={18} /> Apple
                 </button>
               </div>
@@ -116,80 +159,49 @@ function Auth() {
           {/* Signup Form */}
           <div className="w-1/2 p-10 flex flex-col">
             <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-              <div className="relative">
-                <input
-                  type="text"
-                  id="signup-name"
-                  placeholder=" "
-                  className="peer w-full p-4 rounded-lg border border-gray-300 focus:border-[#177529] focus:ring-1 focus:ring-[#177529] focus:outline-none text-[#0C0D19]"
-                  style={{ backgroundColor: "#F9FAFB" }}
-                />
-                <label
-                  htmlFor="signup-name"
-                  className="absolute left-4 top-4 text-gray-400 text-sm
-                             peer-placeholder-shown:top-4 peer-placeholder-shown:text-base
-                             peer-placeholder-shown:text-gray-400
-                             peer-focus:top-1 peer-focus:text-sm peer-focus:text-[#177529] transition-all"
-                >
-                  Full Name
-                </label>
-              </div>
-
-              <div className="relative">
-                <input
-                  type="email"
-                  id="signup-email"
-                  placeholder=" "
-                  className="peer w-full p-4 rounded-lg border border-gray-300 focus:border-[#177529] focus:ring-1 focus:ring-[#177529] focus:outline-none text-[#0C0D19]"
-                  style={{ backgroundColor: "#F9FAFB" }}
-                />
-                <label
-                  htmlFor="signup-email"
-                  className="absolute left-4 top-4 text-gray-400 text-sm
-                             peer-placeholder-shown:top-4 peer-placeholder-shown:text-base
-                             peer-placeholder-shown:text-gray-400
-                             peer-focus:top-1 peer-focus:text-sm peer-focus:text-[#177529] transition-all"
-                >
-                  Email
-                </label>
-              </div>
-
-              <div className="relative">
-                <input
-                  type="password"
-                  id="signup-password"
-                  placeholder=" "
-                  className="peer w-full p-4 rounded-lg border border-gray-300 focus:border-[#177529] focus:ring-1 focus:ring-[#177529] focus:outline-none text-[#0C0D19]"
-                  style={{ backgroundColor: "#F9FAFB" }}
-                />
-                <label
-                  htmlFor="signup-password"
-                  className="absolute left-4 top-4 text-gray-400 text-sm
-                             peer-placeholder-shown:top-4 peer-placeholder-shown:text-base
-                             peer-placeholder-shown:text-gray-400
-                             peer-focus:top-1 peer-focus:text-sm peer-focus:text-[#177529] transition-all"
-                >
-                  Password
-                </label>
-              </div>
-
+              <input
+                type="text"
+                placeholder="Full Name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="p-4 rounded-lg border border-gray-300"
+              />
+              <input
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="p-4 rounded-lg border border-gray-300"
+              />
+              <input
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="p-4 rounded-lg border border-gray-300"
+              />
               <button
                 type="submit"
-                className="p-4 rounded-xl font-bold text-white hover:brightness-105 transition-all shadow-md"
-                style={{ backgroundColor: "#177529" }}
+                disabled={loading}
+                className="p-4 rounded-xl font-bold text-white bg-[#177529]"
               >
-                Sign Up
+                {loading ? "Signing up..." : "Sign Up"}
               </button>
             </form>
 
-            {/* Social Sign Up */}
-            <div className="mt-6 flex flex-col gap-4">
-              <p className="text-center text-gray-500 font-medium">Or sign up with</p>
+            <div className="mt-6 text-center">
+              <p className="text-gray-500 font-medium mb-2">Or sign up with</p>
               <div className="flex justify-center gap-4">
-                <button className="flex items-center justify-center gap-2 p-3 rounded-xl border border-gray-300 hover:shadow-md transition-all w-24">
+                <button
+                  onClick={() => handleOAuth("oauth_google")}
+                  className="flex items-center gap-2 p-3 rounded-xl border border-gray-300 hover:shadow-md transition-all w-24"
+                >
                   <FcGoogle size={20} /> Google
                 </button>
-                <button className="flex items-center justify-center gap-2 p-3 rounded-xl border border-gray-300 hover:shadow-md transition-all w-24">
+                <button
+                  onClick={() => handleOAuth("oauth_apple")}
+                  className="flex items-center gap-2 p-3 rounded-xl border border-gray-300 hover:shadow-md transition-all w-24"
+                >
                   <FaApple size={18} /> Apple
                 </button>
               </div>
@@ -197,7 +209,7 @@ function Auth() {
           </div>
         </div>
 
-        {/* Back to Homepage Button */}
+        {/* Back Button */}
         <div className="flex justify-center mt-6 mb-4">
           <button
             onClick={goHome}
