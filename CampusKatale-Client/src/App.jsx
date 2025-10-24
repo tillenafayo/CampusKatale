@@ -23,18 +23,15 @@ function ProtectedRoute({ children }) {
   if (!isSignedIn) {
     return <Navigate to="/auth" state={{ from: location }} replace />;
   }
-
   return children;
 }
 
 function App() {
   return (
     <Routes>
-      {/* Public Routes */}
       <Route path="/" element={<Home />} />
       <Route path="/auth" element={<Auth />} />
       <Route path="/product/:id" element={<ProductDetail />} />
-      <Route path="/add-listing" element={<AddListing />} />
 
       <Route
         path="/profile/:id"
@@ -45,14 +42,23 @@ function App() {
         }
       />
 
-      {/* Optional catch-all redirect */}
+      <Route
+        path="/add-listing"
+        element={
+          <ProtectedRoute>
+            <AddListing />
+          </ProtectedRoute>
+        }
+      />
+
       <Route path="*" element={<Navigate to="/" replace />} />
-      {/*<Route path="/marketplace" element={<MarketplacePage />} />
-      <Route path="/chat/:userId" element={<ChatPage />} />
-      <Route path="/admin" element={<AdminDashboardPage />} />
-      <Route path="*" element={<NotFoundPage />} /> */} 
     </Routes>
   );
 }
 
 export default App;
+
+{/*<Route path="/marketplace" element={<MarketplacePage />} />
+<Route path="/chat/:userId" element={<ChatPage />} />
+<Route path="/admin" element={<AdminDashboardPage />} />
+<Route path="*" element={<NotFoundPage />} /> */} 
