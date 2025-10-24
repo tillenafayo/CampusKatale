@@ -11,7 +11,7 @@ import "@mantine/carousel/styles.css";
 const publishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
 if (!publishableKey) {
-  throw new Error("Missing Clerk publishable key");
+  throw new Error("Missing Clerk publishable key in environment variables");
 }
 
 createRoot(document.getElementById("root")).render(
@@ -22,6 +22,6 @@ createRoot(document.getElementById("root")).render(
           <App />
         </BrowserRouter>
       </ClerkProvider>
-      </MantineProvider>
+    </MantineProvider>
   </StrictMode>
 );
