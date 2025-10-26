@@ -12,18 +12,20 @@ function Home() {
   useEffect(() => {
     async function fetchProducts() {
       try {
-        const response = await fetch("https://dummyjson.com/products");
+        const response = await fetch("http://localhost:1337/api/listings?populate=*");
         if (!response.ok) throw new Error("Network response was not ok");
         const data = await response.json();
-        const formattedProducts = data.products.map((product) => ({
-          id: product.id,
-          image: product.images[0],
-          title: product.title,
-          description: product.description,
-          badge: `$${product.price}`,
+
+        // ✅ match actual API structure (data.data)
+        const formattedProducts = data.data.map((item) => ({
+          id: item.documentId,
+          title: item.title,
+          description: item.description || "No description available.",
+          image: item.image?.[0]?.formats?.medium?.url || item.image?.[0]?.url,
+          badge: `UGX ${item.price}`,
           buttonText: "View Details",
-          productId: product.id,
         }));
+
         setProducts(formattedProducts);
       } catch (error) {
         setError(error.message);
@@ -31,6 +33,7 @@ function Home() {
         setLoading(false);
       }
     }
+
     fetchProducts();
   }, []);
 
@@ -62,12 +65,14 @@ function Home() {
     <>
       <Navbar />
       <Hero />
+
       <main className="font-[Lexend] bg-[#F9FAFB] min-h-screen pt-10 px-6 md:px-10">
-        <h1 className="text-2xl md:text-3xl font-semibold text-[#0C0D19] mb-6 lg:px-80">
+        <h1 className="text-2xl md:text-3xl font-semibold text-[#0C0D19] mb-6 text-center">
           Browse Latest Listings
         </h1>
+
         {products.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 lg:px-80">
+          <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {products.map((product) => (
               <AdCard
                 key={product.id}
@@ -79,9 +84,11 @@ function Home() {
         ) : (
           <p className="text-center text-[#6B7280]">No ads available.</p>
         )}
+
         <Scroll />
-        <Footer />
       </main>
+
+      <Footer />
     </>
   );
 }
