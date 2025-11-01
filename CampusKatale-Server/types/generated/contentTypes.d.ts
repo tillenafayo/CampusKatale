@@ -455,7 +455,7 @@ export interface ApiListingListing extends Struct.CollectionTypeSchema {
       Schema.Attribute.Private;
     price: Schema.Attribute.String & Schema.Attribute.Required;
     publishedAt: Schema.Attribute.DateTime;
-    seller: Schema.Attribute.String;
+    seller: Schema.Attribute.String & Schema.Attribute.Required;
     title: Schema.Attribute.String & Schema.Attribute.Required;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &

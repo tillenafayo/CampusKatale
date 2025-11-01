@@ -42,14 +42,7 @@ function App() {
         }
       />
 
-      <Route
-        path="/add-listing"
-        element={
-          <ProtectedRoute>
-            <AddListing />
-          </ProtectedRoute>
-        }
-      />
+      <Route path="/add-listing" element={<AddListing />} />
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

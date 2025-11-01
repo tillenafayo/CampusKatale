@@ -80,7 +80,7 @@ function AddListing() {
           price: formData.price,
           category: formData.category,
           seller: userId,
-          images: uploadedImageIds, // ✅ plural field
+          images: uploadedImageIds,
         },
       };
 
