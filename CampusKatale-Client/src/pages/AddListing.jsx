@@ -1,15 +1,12 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Navbar } from "../components";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@clerk/clerk-react";
 import axios from "axios";
 import "@fontsource-variable/lexend";
 
 function AddListing() {
   const navigate = useNavigate();
-  const { getToken, userId } = useAuth();
-
-  const STRAPI_URL = "http://localhost:1337"; 
+  const STRAPI_URL = import.meta.env.VITE_STRAPI_URL || "http://localhost:1337";
 
   const [formData, setFormData] = useState({
     title: "",
@@ -17,98 +14,135 @@ function AddListing() {
     price: "",
     category: "",
     images: [],
+    seller: "John Doe",
   });
 
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
+  const [isDragging, setIsDragging] = useState(false);
 
-  // go home
+  const fileInputRef = useRef(null);
+
+  // Go home
   const goHome = () => navigate("/");
 
-  // handle input change
+  // Handle input change
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // handle image uploads
-  const handleImageChange = (e) => {
-    const files = Array.from(e.target.files);
-    if (files.length > 3) {
+  // Handle selected or dropped files
+  const handleFiles = (files) => {
+    const selectedFiles = Array.from(files).slice(0, 3);
+    setFormData({ ...formData, images: selectedFiles });
+  };
+
+  // Handle drag & drop image uploads
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (e.dataTransfer.files) handleFiles(e.dataTransfer.files);
+  };
+
+  const handleImageChange = (e) => handleFiles(e.target.files);
+
+  const removeImage = (index) => {
+    setFormData({
+      ...formData,
+      images: formData.images.filter((_, i) => i !== index),
+    });
+  };
+
+  // Upload image to Strapi
+  const uploadImageToStrapi = async (file) => {
+    const data = new FormData();
+    data.append("files", file);
+    const res = await axios.post(`${STRAPI_URL}/api/upload`, data);
+    return res.data?.[0]?.id;
+  };
+
+  // Handle form submission
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    // Client-side validation
+    if (
+      !formData.title.trim() ||
+      !formData.description.trim() ||
+      !formData.price
+    ) {
       setMessage({
         type: "error",
-        text: "You can upload a maximum of 3 images.",
+        text: "Please fill in all required fields.",
       });
       return;
     }
-    setFormData({ ...formData, images: files });
-  };
 
-  // upload single image to Strapi
-  const uploadImageToStrapi = async (file, token) => {
-    const data = new FormData();
-    data.append("files", file);
+    if (formData.images.length === 0) {
+      setMessage({ type: "error", text: "Please upload at least one image." });
+      return;
+    }
 
-    const res = await axios.post(`${STRAPI_URL}/api/upload`, data, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
-    return res.data[0].id;
-  };
-
-  // handle form submission
-  const handleSubmit = async (e) => {
-    e.preventDefault();
     setLoading(true);
     setMessage({ type: "", text: "" });
 
     try {
-      const token = await getToken();
-      if (!token) throw new Error("Please log in to add a listing.");
-
-      // Upload images first
+      // Upload images
       const uploadedImageIds = [];
       for (const file of formData.images) {
-        const id = await uploadImageToStrapi(file, token);
-        uploadedImageIds.push(id);
+        const id = await uploadImageToStrapi(file);
+        if (id) uploadedImageIds.push(id);
       }
 
       // Prepare listing payload
       const payload = {
         data: {
-          title: formData.title,
-          description: formData.description,
-          price: formData.price,
-          category: formData.category,
-          seller: userId,
+          title: formData.title.trim(),
+          description: formData.description.trim(),
+          price: formData.price.toString(),
+          category: formData.category || "Other",
           images: uploadedImageIds,
+          seller: formData.seller,
         },
       };
 
+      console.log("Submitting payload:", payload);
+
       // Create listing
-      const res = await axios.post(`${STRAPI_URL}/api/listings`, payload, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      const res = await axios.post(`${STRAPI_URL}/api/listings`, payload);
 
       if (res.status === 200 || res.status === 201) {
         setMessage({
           type: "success",
           text: "🎉 Listing created successfully!",
         });
-        setTimeout(() => navigate("/marketplace"), 1500);
+        setTimeout(() => navigate("/"), 1500);
       }
     } catch (err) {
-      console.error(err);
+      console.error("Submission error:", err);
       setMessage({
         type: "error",
-        text: err.response?.data?.error?.message || err.message,
+        text: err.response?.data?.error?.message || "Failed to create listing.",
       });
     } finally {
       setLoading(false);
     }
   };
+
+  // Cleanup object URLs
+  useEffect(() => {
+    return () => formData.images.forEach((img) => URL.revokeObjectURL(img));
+  }, [formData.images]);
 
   return (
     <div className="min-h-screen bg-white text-[#0C0D19] font-[Lexend] p-6">
@@ -118,7 +152,6 @@ function AddListing() {
           Add New Listing
         </h1>
 
-        {/* Message Box */}
         {message.text && (
           <div
             className={`text-center py-3 px-4 mb-6 rounded-lg font-medium ${
@@ -191,10 +224,10 @@ function AddListing() {
               required
             >
               <option value="">Select category</option>
-              <option value="books">Books</option>
-              <option value="electronics">Electronics</option>
-              <option value="clothing">Clothing</option>
-              <option value="other">Other</option>
+              <option value="Books">Books</option>
+              <option value="Electronics">Electronics</option>
+              <option value="Clothing">Clothing</option>
+              <option value="Other">Other</option>
             </select>
           </div>
 
@@ -203,28 +236,49 @@ function AddListing() {
             <label className="block font-semibold mb-2">
               Upload Images (max 3)
             </label>
-            <input
-              type="file"
-              accept="image/*"
-              multiple
-              onChange={handleImageChange}
-              className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 
-                         file:rounded-lg file:border-0 file:text-sm file:font-semibold 
-                         file:bg-[#177529] file:text-white hover:file:bg-[#97C040]
-                         cursor-pointer"
-            />
+
+            <div
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              onClick={() => fileInputRef.current.click()}
+              className={`w-full h-36 border-2 border-dashed rounded-lg flex flex-col justify-center items-center cursor-pointer transition-colors ${
+                isDragging
+                  ? "border-green-500 bg-green-50"
+                  : "border-gray-300 bg-white"
+              }`}
+            >
+              <p className="text-gray-500 mb-2">Drag & Drop your images here</p>
+              <p className="text-gray-400 text-sm">or click to choose files</p>
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                ref={fileInputRef}
+                onChange={handleImageChange}
+                className="hidden"
+              />
+            </div>
+
             {formData.images.length > 0 && (
               <div className="flex flex-wrap gap-3 mt-4">
                 {formData.images.map((img, i) => (
                   <div
                     key={i}
-                    className="relative w-28 h-28 rounded-lg overflow-hidden border border-[#97C040]"
+                    className="relative w-28 h-28 rounded-lg overflow-hidden border border-green-400"
                   >
                     <img
                       src={URL.createObjectURL(img)}
                       alt={`Preview ${i + 1}`}
                       className="w-full h-full object-cover"
                     />
+                    <button
+                      type="button"
+                      onClick={() => removeImage(i)}
+                      className="absolute top-1 right-1 bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs hover:bg-red-600"
+                    >
+                      ×
+                    </button>
                   </div>
                 ))}
               </div>
