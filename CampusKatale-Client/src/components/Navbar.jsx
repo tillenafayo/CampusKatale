@@ -3,10 +3,8 @@ import { useNavigate } from "react-router-dom";
 import {
   IconMenu2,
   IconSearch,
-  IconUser,
+  IconUserCircle,
   IconShoppingCart,
-  IconSun,
-  IconMoon,
   IconPlus,
 } from "@tabler/icons-react";
 import {
@@ -28,7 +26,7 @@ export default function Navbar() {
   const [dark, setDark] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [searchValue, setSearchValue] = useState("");
-  const [cartCount, setCartCount] = useState(0);
+  const [cartCount, setCartCount] = useState();
   const navigate = useNavigate();
 
   useHotkeys([["mod+J", () => setDark((v) => !v)]]);
@@ -46,12 +44,7 @@ export default function Navbar() {
 
   return (
     <>
-      <Transition
-        mounted
-        transition="fade"
-        duration={400}
-        timingFunction="ease"
-      >
+      <Transition mounted transition="fade" duration={400} timingFunction="ease">
         {(styles) => (
           <header
             style={styles}
@@ -61,10 +54,14 @@ export default function Navbar() {
                 : "bg-white border-[#E5E7EB]"
             } ${scrolled ? "shadow-sm py-2" : "py-3"}`}
           >
-            <div className="max-w-7xl mx-auto flex items-center justify-between px-6">
-              {/* Logo Section */}
-              <Group>
-                <ActionIcon variant="transparent" onClick={open}>
+            <div className="max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-6">
+              {/* Left: Logo + Mobile Menu */}
+              <div className="flex items-center gap-3">
+                <ActionIcon
+                  variant="transparent"
+                  onClick={open}
+                  className="md:hidden"
+                >
                   <IconMenu2 size={24} color={dark ? "#97C040" : "#177529"} />
                 </ActionIcon>
                 <div
@@ -74,12 +71,12 @@ export default function Navbar() {
                   <img
                     src={logo}
                     alt="Campus Katale Logo"
-                    className="w-[130px] md:w-[150px] h-auto"
+                    className="w-[120px] sm:w-[150px] h-auto"
                   />
                 </div>
-              </Group>
+              </div>
 
-              {/* Search Input */}
+              {/* Center: Search (hidden on mobile) */}
               <form
                 onSubmit={handleSearch}
                 className="hidden md:flex w-1/2 justify-center"
@@ -102,38 +99,44 @@ export default function Navbar() {
                 />
               </form>
 
-              {/* Right Section */}
-              <Group gap="sm">
-                {/* AddListing */}
-                <Menu shadow="md" width={180}>
-                  <Menu.Target>
-                    <Button
-                      variant="outline"
-                      leftSection={<IconPlus size={16} />}
-                      className={`font-medium flex items-center gap-2 transition-colors duration-300 ${
-                        dark
-                          ? "text-[#97C040] border-[#97C040] hover:bg-[#97C040] hover:text-white"
-                          : "text-[#177529] border-[#177529] hover:bg-[#177529] hover:text-white"
-                      }`}
-                      onClick={() => navigate("/add-listing")}
-                    >
-                      Add Listing
-                    </Button>
-                  </Menu.Target>
-                </Menu>
-                {/* User Menu */}
+              {/* Right: Actions */}
+              <Group gap="sm" className="hidden md:flex">
+                {/* Add Listing */}
+                <Button
+                  variant="subtle"
+                  leftSection={<IconPlus size={16} />}
+                  className={`font-medium flex items-center gap-2 transition-colors duration-300 border-0 shadow-none ${
+                    dark
+                      ? "bg-transparent text-[#97C040] hover:bg-[#97C040] hover:text-white"
+                      : "bg-transparent text-[#177529] hover:bg-[#177529] hover:text-white"
+                  }`}
+                  onClick={() => navigate("/add-listing")}
+                >
+                  Add Listing
+                </Button>
+
+
+                {/* Cart */}
+                <Button
+                  variant="subtle"
+                  className="bg-[#177529] hover:bg-[#97C040] text-white transition-all "
+                  leftSection={<IconShoppingCart size={16} />}
+                >
+                  {/* {cartCount} */}
+                </Button>
+
+                {/* Account Menu */}
                 <Menu shadow="md" width={180}>
                   <Menu.Target>
                     <Button
                       variant="subtle"
-                      leftSection={<IconUser size={16} />}
+                      leftSection={<IconUserCircle size={30} />}
                       className={`font-medium ${
                         dark
                           ? "text-[#97C040] hover:text-[#F8C810]"
                           : "text-[#0C0D19] hover:text-[#177529]"
                       }`}
                     >
-                      Account
                     </Button>
                   </Menu.Target>
                   <Menu.Dropdown>
@@ -145,59 +148,59 @@ export default function Navbar() {
                     </Menu.Item>
                   </Menu.Dropdown>
                 </Menu>
-
-                {/* Theme Toggle */}
-                <ActionIcon
-                  variant="subtle"
-                  onClick={() => setDark((v) => !v)}
-                  title="Toggle theme"
-                >
-                  {dark ? (
-                    <IconSun size={20} color="#F8C810" />
-                  ) : (
-                    <IconMoon size={20} color="#177529" />
-                  )}
-                </ActionIcon>
-
-                {/* Cart Button */}
-                <Button
-                  variant="filled"
-                  className="bg-[#177529] hover:bg-[#97C040] text-white transition-all"
-                  leftSection={<IconShoppingCart size={16} />}
-                >
-                  {cartCount}
-                </Button>
               </Group>
+
+              {/* Mobile Cart + Theme Toggle */}
+              <div className="flex md:hidden items-center gap-3">
+                <ActionIcon
+                  variant="filled"
+                  className="bg-[#177529] hover:bg-[#97C040]"
+                >
+                  <IconShoppingCart size={18} color="#fff" />
+                </ActionIcon>
+              </div>
             </div>
           </header>
         )}
       </Transition>
 
-      {/* Drawer for Categories */}
+      {/* Drawer for Mobile Menu */}
       <Drawer
         opened={opened}
         onClose={close}
         title={
           <Text fw={600} size="lg">
-            Browse Categories
+            CampusKatale Menu
           </Text>
         }
         padding="md"
         size="sm"
         overlayProps={{ opacity: 0.5, blur: 2 }}
       >
+        <form onSubmit={handleSearch} className="mb-4">
+          <TextInput
+            icon={<IconSearch size={18} color="#177529" />}
+            radius="md"
+            placeholder="Search campus deals..."
+            value={searchValue}
+            onChange={(e) => setSearchValue(e.currentTarget.value)}
+          />
+        </form>
+
         {[
+          "Home",
           "Groceries",
           "Electronics",
           "Clothing",
-          "Home Essentials",
-          "Toys & Games",
+          "Essentials",
           "Sports",
+          "Contact",
         ].map((category) => (
           <Button
             key={category}
             variant="subtle"
             fullWidth
+            onClick={close}
             className="justify-start text-[#177529] hover:text-[#97C040] font-medium"
           >
             {category}

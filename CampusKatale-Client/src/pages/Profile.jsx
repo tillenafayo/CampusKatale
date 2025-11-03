@@ -4,9 +4,9 @@ import { useNavigate } from "react-router-dom";
 import { FaEdit, FaSignOutAlt } from "react-icons/fa";
 
 function Profile() {
-  const { user } = useUser();        // Clerk authenticated user
-  const { signOut } = useAuth();     // Logout function
-  const clerk = useClerk();          // Full Clerk instance
+  const { user } = useUser();
+  const { signOut } = useAuth();     
+  const clerk = useClerk();  
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("ads");
 

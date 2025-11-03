@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useSignIn, useSignUp, useAuth } from "@clerk/clerk-react";
 import { FcGoogle } from "react-icons/fc";
-import { FaApple } from "react-icons/fa";
+import { FaApple, FaEye, FaEyeSlash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
 function Auth() {
@@ -11,36 +11,48 @@ function Auth() {
   const [name, setName] = useState("");
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const navigate = useNavigate();
   const { signIn, isLoaded: signInLoaded } = useSignIn();
   const { signUp, isLoaded: signUpLoaded } = useSignUp();
   const { isSignedIn } = useAuth();
 
-  const toggleForm = (form) => setIsLogin(form === "login");
+  const toggleForm = (form) => {
+    setIsLogin(form === "login");
+    setError(null);
+    clearFields();
+  };
+
+  const clearFields = () => {
+    setEmail("");
+    setPassword("");
+    setName("");
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!signInLoaded || !signUpLoaded) return;
+
     setError(null);
     setLoading(true);
 
     try {
       if (isLogin) {
-        if (!signInLoaded) return;
-
+        // 🔐 Login flow
         const result = await signIn.create({
           identifier: email,
           password,
         });
 
         if (result.status === "complete") {
+          clearFields();
           navigate("/dashboard");
         } else {
-          console.log("Sign-in next step:", result);
+          setError("Login incomplete. Please try again.");
         }
       } else {
-        if (!signUpLoaded) return;
-
+        // 🆕 Signup flow (No email verification)
         const result = await signUp.create({
           emailAddress: email,
           password,
@@ -48,41 +60,43 @@ function Auth() {
         });
 
         if (result.status === "complete") {
+          clearFields();
           navigate("/dashboard");
         } else {
           console.log("Sign-up next step:", result);
+          setError("Signup incomplete. Please try again.");
         }
       }
     } catch (err) {
-      console.error(err);
+      console.error("Clerk Error:", err);
       setError(err.errors ? err.errors[0].message : err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleOAuth = async (provider, id) => {
+  const handleOAuth = async (provider) => {
     try {
       if (isLogin && signInLoaded) {
         await signIn.authenticateWithRedirect({
           strategy: provider,
-          redirectUrl: `/profile/${id}`,
+          redirectUrl: "/dashboard",
         });
       } else if (signUpLoaded) {
         await signUp.authenticateWithRedirect({
           strategy: provider,
-          redirectUrl: `/profile/${id}`,
+          redirectUrl: "/dashboard",
         });
       }
     } catch (err) {
+      console.error(err);
       setError(err.message);
     }
   };
 
   const goHome = () => navigate("/");
 
-  // Optional: redirect if already signed in
-  if (isSignedIn) navigate("/profile/:id");
+  if (isSignedIn) navigate("/dashboard");
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#F9FAFB] font-[Lexend]">
@@ -120,18 +134,34 @@ function Auth() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="p-4 rounded-lg border border-gray-300"
+                required
               />
-              <input
-                type="password"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="p-4 rounded-lg border border-gray-300"
-              />
+
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="p-4 rounded-lg border border-gray-300 w-full"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-3 flex items-center text-gray-500"
+                >
+                  {showPassword ? <FaEyeSlash /> : <FaEye />}
+                </button>
+              </div>
+
+              {error && (
+                <p className="text-red-500 text-sm text-center -mt-3">{error}</p>
+              )}
               <button
                 type="submit"
                 disabled={loading}
-                className="p-4 rounded-xl font-bold text-white bg-[#177529]"
+                className="p-4 rounded-xl font-bold text-white bg-[#177529] hover:bg-[#97C040] transition-all"
               >
                 {loading ? "Logging in..." : "Login"}
               </button>
@@ -165,6 +195,7 @@ function Auth() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="p-4 rounded-lg border border-gray-300"
+                required
               />
               <input
                 type="email"
@@ -172,18 +203,32 @@ function Auth() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="p-4 rounded-lg border border-gray-300"
+                required
               />
-              <input
-                type="password"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="p-4 rounded-lg border border-gray-300"
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="p-4 rounded-lg border border-gray-300 w-full"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-3 flex items-center text-gray-500"
+                >
+                  {showPassword ? <FaEyeSlash /> : <FaEye />}
+                </button>
+              </div>
+              {error && (
+                <p className="text-red-500 text-sm text-center -mt-3">{error}</p>
+              )}
               <button
                 type="submit"
                 disabled={loading}
-                className="p-4 rounded-xl font-bold text-white bg-[#177529]"
+                className="p-4 rounded-xl font-bold text-white bg-[#177529] hover:bg-[#97C040] transition-all"
               >
                 {loading ? "Signing up..." : "Sign Up"}
               </button>
