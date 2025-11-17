@@ -42,7 +42,14 @@ function App() {
         }
       />
 
-      <Route path="/add-listing" element={<AddListing />} />
+      <Route
+        path="/add-listing"
+        element={
+          <ProtectedRoute>
+            <AddListing />
+          </ProtectedRoute>
+        }
+      />
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
@@ -51,7 +58,9 @@ function App() {
 
 export default App;
 
-{/*<Route path="/marketplace" element={<MarketplacePage />} />
+{
+  /*<Route path="/marketplace" element={<MarketplacePage />} />
 <Route path="/chat/:userId" element={<ChatPage />} />
 <Route path="/admin" element={<AdminDashboardPage />} />
-<Route path="*" element={<NotFoundPage />} /> */} 
+<Route path="*" element={<NotFoundPage />} /> */
+}
