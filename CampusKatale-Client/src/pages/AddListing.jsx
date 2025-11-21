@@ -6,7 +6,7 @@ import "@fontsource-variable/lexend";
 
 function AddListing() {
   const navigate = useNavigate();
-  const STRAPI_URL = import.meta.env.VITE_STRAPI_URL || "http://localhost:1337";
+  const STRAPI_URL = import.meta.env.VITE_STRAPI_URL;
 
   const [formData, setFormData] = useState({
     title: "",
@@ -201,7 +201,7 @@ function AddListing() {
                 UGX
               </span>
               <input
-                type="number"
+                type="text"
                 name="price"
                 value={formData.price}
                 onChange={handleChange}

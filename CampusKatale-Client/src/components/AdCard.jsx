@@ -1,6 +1,13 @@
 import "@fontsource-variable/lexend";
 
-function AdCard({ image, title, description, badge, buttonText, onButtonClick}) {
+function AdCard({
+  image,
+  title,
+  description,
+  badge,
+  buttonText,
+  onButtonClick,
+}) {
   return (
     <div
       className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl 
@@ -10,7 +17,11 @@ function AdCard({ image, title, description, badge, buttonText, onButtonClick}) 
       {/* Image Section */}
       <div className="relative group">
         <img
-          src={image}
+          src={
+            image?.startsWith("https")
+              ? image
+              : `${import.meta.env.VITE_STRAPI_URL}${image}`
+          }
           alt={title}
           className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
         />

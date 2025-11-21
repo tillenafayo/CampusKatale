@@ -12,11 +12,13 @@ function ProductDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const STRAPI_URL = import.meta.env.VITE_STRAPI_URL;
+
   useEffect(() => {
     async function fetchProduct() {
       try {
         const response = await fetch(
-          `http://localhost:1337/api/listings/${id}?populate=*`
+          `${STRAPI_URL}/api/listings/${id}?populate=*`
         );
         if (!response.ok) throw new Error("Product not found");
 
@@ -24,12 +26,12 @@ function ProductDetail() {
         const item = data.data;
 
         const images =
-          item.image?.map(
-            (img) =>
-              img.formats?.medium?.url ||
-              img.formats?.small?.url ||
-              img.url
-          ) || [];
+          item.images?.map((img) => {
+            const url =
+              img.formats?.medium?.url || img.formats?.small?.url || img.url;
+
+            return url.startsWith("https") ? url : STRAPI_URL + url;
+          }) || [];
 
         setProduct({
           id: item.documentId,
