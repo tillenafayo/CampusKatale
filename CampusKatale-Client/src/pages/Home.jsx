@@ -9,10 +9,13 @@ function Home() {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
+  const STRAPI_URL = import.meta.env.VITE_STRAPI_URL;
+
+
   useEffect(() => {
     async function fetchProducts() {
       try {
-        const response = await fetch("http://localhost:1337/api/listings?populate=*");
+        const response = await fetch(`${STRAPI_URL}/api/listings?populate=*`);
         if (!response.ok) throw new Error("Network response was not ok");
         const data = await response.json();
 
@@ -21,7 +24,7 @@ function Home() {
           id: item.documentId,
           title: item.title,
           description: item.description || "No description available.",
-          image: item.image?.[0]?.formats?.medium?.url || item.image?.[0]?.url,
+          image: item.images?.[0]?.formats?.medium?.url || item.images?.[0]?.url,
           badge: `UGX ${item.price}`,
           buttonText: "View Details",
         }));
