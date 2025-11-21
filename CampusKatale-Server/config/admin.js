@@ -17,4 +17,6 @@ module.exports = ({ env }) => ({
     nps: env.bool('FLAG_NPS', true),
     promoteEE: env.bool('FLAG_PROMOTE_EE', true),
   },
+  url: env("RENDER_EXTERNAL_URL") + "/admin",
+  https: true,
 });

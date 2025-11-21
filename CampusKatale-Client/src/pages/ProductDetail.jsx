@@ -24,7 +24,7 @@ function ProductDetail() {
         const item = data.data;
 
         const images =
-          item.image?.map(
+          item.images?.map(
             (img) =>
               img.formats?.medium?.url ||
               img.formats?.small?.url ||

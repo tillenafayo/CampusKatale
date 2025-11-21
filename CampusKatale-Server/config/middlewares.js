@@ -15,6 +15,12 @@ module.exports = [
       },
     },
   },
+  {
+    name: "strapi::cookie",
+    config: {
+      secure: true,
+    },
+  },
   "strapi::cors",
   "strapi::poweredBy",
   "strapi::query",
