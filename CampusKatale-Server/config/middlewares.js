@@ -1,5 +1,4 @@
 module.exports = [
-  "strapi::logger",
   "strapi::errors",
   {
     name: "strapi::security",
@@ -15,17 +14,20 @@ module.exports = [
       },
     },
   },
-  {
-    name: "strapi::cookie",
-    config: {
-      secure: true,
-    },
-  },
   "strapi::cors",
   "strapi::poweredBy",
+  "strapi::logger",
   "strapi::query",
   "strapi::body",
-  "strapi::session",
+  {
+    name: "strapi::session",
+    config: {
+      key: "strapi.sid",
+      secure: true,
+      sameSite: "none",
+      maxAge: 86400000,
+    },
+  },
   "strapi::favicon",
   "strapi::public",
 ];
